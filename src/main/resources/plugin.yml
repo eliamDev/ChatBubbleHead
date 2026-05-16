@@ -1,0 +1,17 @@
+name: DCChatBubbles
+version: 1.0.0
+main: com.diacero.chatbubbles.DCChatBubbles
+api-version: "1.21"
+description: Muestra los mensajes del chat como globos de texto sobre la cabeza del jugador.
+author: DiaCero
+
+commands:
+  chatbubble:
+    description: Activa o desactiva los globos de chat.
+    usage: /chatbubble
+    permission: dc.chatbubble
+
+permissions:
+  dc.chatbubble:
+    description: Permite activar/desactivar los globos de chat.
+    default: op
