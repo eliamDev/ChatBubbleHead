@@ -88,12 +88,26 @@ public class ChatBubbleListener implements Listener {
             td.setPersistent(false);
             td.setTeleportDuration(4); // interpolación suave al mover
             td.setShadowed(false);
+            // Iniciamos con escala 0 para el efecto pop-in
             td.setTransformation(new Transformation(
                     new Vector3f(0, 0, 0),
                     new AxisAngle4f(0, 0, 0, 1),
-                    new Vector3f(SCALE, SCALE, SCALE),
+                    new Vector3f(0, 0, 0),
                     new AxisAngle4f(0, 0, 0, 1)));
         });
+
+        // Aplicamos la animación premium de crecimiento (Pop-in) con 1 tick de retraso para que el cliente la dibuje
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!display.isDead()) {
+                display.setInterpolationDuration(10); // 10 ticks (0.5 seg) para que nazca más suavemente
+                display.setInterpolationDelay(0);
+                display.setTransformation(new Transformation(
+                        new Vector3f(0, 0, 0),
+                        new AxisAngle4f(0, 0, 0, 1),
+                        new Vector3f(SCALE, SCALE, SCALE),
+                        new AxisAngle4f(0, 0, 0, 1)));
+            }
+        }, 1L);
 
         // Seguir al jugador cada 2 ticks
         BukkitRunnable follow = new BukkitRunnable() {
@@ -108,11 +122,24 @@ public class ChatBubbleListener implements Listener {
         };
         follow.runTaskTimer(plugin, 1L, 2L);
 
-        // Eliminar después de X segundos
+        // Eliminar después de X segundos con animación de encogimiento (Pop-out)
         BukkitRunnable expire = new BukkitRunnable() {
             @Override
             public void run() {
-                removeBubble(player.getUniqueId());
+                if (!display.isDead()) {
+                    display.setInterpolationDuration(10); // 10 ticks al desaparecer
+                    display.setInterpolationDelay(0);
+                    display.setTransformation(new Transformation(
+                            new Vector3f(0, 0, 0),
+                            new AxisAngle4f(0, 0, 0, 1),
+                            new Vector3f(0, 0, 0), // Escala vuelve a 0
+                            new AxisAngle4f(0, 0, 0, 1)));
+                }
+                
+                // Borrar la entidad por completo justo después de que termine la animación
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    removeBubble(player.getUniqueId());
+                }, 11L);
             }
         };
         expire.runTaskLater(plugin, DISPLAY_TICKS);
