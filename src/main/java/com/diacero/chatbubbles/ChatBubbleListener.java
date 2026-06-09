@@ -76,13 +76,14 @@ public class ChatBubbleListener implements Listener {
         removeBubble(player.getUniqueId()); // reemplaza el globo anterior si existe
 
         TextDisplay display = player.getWorld().spawn(bubbleLocation(player), TextDisplay.class, td -> {
-            td.text(Component.text(message).color(NamedTextColor.BLACK));
+            td.text(Component.text(" " + message + " ").color(NamedTextColor.BLACK));
             td.setBillboard(Display.Billboard.CENTER);              // siempre mira al jugador
             td.setBackgroundColor(Color.fromARGB(220, 255, 255, 255)); // fondo blanco
             td.setDefaultBackground(false);
             td.setLineWidth(LINE_WIDTH);
             td.setPersistent(false);
-            td.setShadowed(true);
+            td.setTeleportDuration(4); // interpolación suave al mover
+            td.setShadowed(false);
             td.setTransformation(new Transformation(
                     new Vector3f(0, 0, 0),
                     new AxisAngle4f(0, 0, 0, 1),
