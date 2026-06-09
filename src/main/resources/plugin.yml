@@ -1,5 +1,5 @@
 name: DCChatBubbles
-version: 1.0.0
+version: '${project.version}'
 main: com.diacero.chatbubbles.DCChatBubbles
 api-version: "1.21"
 description: Muestra los mensajes del chat como globos de texto sobre la cabeza del jugador.
