@@ -25,16 +25,17 @@ import java.util.UUID;
 
 public class ChatBubbleListener implements Listener {
 
-    private int   MAX_CHARS;
-    private long  DISPLAY_TICKS;
+    private int MAX_CHARS;
+    private long DISPLAY_TICKS;
     private float BUBBLE_Y;
     private float SCALE;
-    private int   LINE_WIDTH;
+    private int LINE_WIDTH;
 
     private final JavaPlugin plugin;
     private final Map<UUID, BubbleData> bubbles = new HashMap<>();
 
-    private record BubbleData(TextDisplay display, BukkitRunnable follow, BukkitRunnable expire) {}
+    private record BubbleData(TextDisplay display, BukkitRunnable follow, BukkitRunnable expire) {
+    }
 
     public ChatBubbleListener(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -42,24 +43,27 @@ public class ChatBubbleListener implements Listener {
     }
 
     public void reloadConfig() {
-        MAX_CHARS     = plugin.getConfig().getInt("max_chars", 80);
+        MAX_CHARS = plugin.getConfig().getInt("max_chars", 80);
         DISPLAY_TICKS = plugin.getConfig().getInt("duracion", 6) * 20L;
-        BUBBLE_Y      = (float) plugin.getConfig().getDouble("altura", 2.35);
-        SCALE         = (float) plugin.getConfig().getDouble("escala", 0.6);
-        LINE_WIDTH    = plugin.getConfig().getInt("ancho_linea", 190);
+        BUBBLE_Y = (float) plugin.getConfig().getDouble("altura", 2.35);
+        SCALE = (float) plugin.getConfig().getDouble("escala", 0.6);
+        LINE_WIDTH = plugin.getConfig().getInt("ancho_linea", 190);
     }
 
     // ── Eventos ───────────────────────────────────────────────────────────────
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
-        if (!((DCChatBubbles) plugin).isBubblesEnabled()) return;
+        if (!((DCChatBubbles) plugin).isBubblesEnabled())
+            return;
         String plain = PlainTextComponentSerializer.plainText().serialize(event.message());
-        if (plain.isBlank()) return;
-        if (plain.length() > MAX_CHARS) plain = plain.substring(0, MAX_CHARS - 3) + "...";
+        if (plain.isBlank())
+            return;
+        if (plain.length() > MAX_CHARS)
+            plain = plain.substring(0, MAX_CHARS - 3) + "...";
 
         final String message = plain;
-        final Player player  = event.getPlayer();
+        final Player player = event.getPlayer();
 
         // AsyncChatEvent es async — spawneamos en el hilo principal
         plugin.getServer().getScheduler().runTask(plugin, () -> spawnBubble(player, message));
@@ -77,7 +81,7 @@ public class ChatBubbleListener implements Listener {
 
         TextDisplay display = player.getWorld().spawn(bubbleLocation(player), TextDisplay.class, td -> {
             td.text(Component.text(" " + message + " ").color(NamedTextColor.BLACK));
-            td.setBillboard(Display.Billboard.CENTER);              // siempre mira al jugador
+            td.setBillboard(Display.Billboard.CENTER); // siempre mira al jugador
             td.setBackgroundColor(Color.fromARGB(220, 255, 255, 255)); // fondo blanco
             td.setDefaultBackground(false);
             td.setLineWidth(LINE_WIDTH);
@@ -88,14 +92,17 @@ public class ChatBubbleListener implements Listener {
                     new Vector3f(0, 0, 0),
                     new AxisAngle4f(0, 0, 0, 1),
                     new Vector3f(SCALE, SCALE, SCALE),
-                    new AxisAngle4f(0, 0, 0, 1)
-            ));
+                    new AxisAngle4f(0, 0, 0, 1)));
         });
 
         // Seguir al jugador cada 2 ticks
         BukkitRunnable follow = new BukkitRunnable() {
-            @Override public void run() {
-                if (!player.isOnline() || display.isDead()) { cancel(); return; }
+            @Override
+            public void run() {
+                if (!player.isOnline() || display.isDead()) {
+                    cancel();
+                    return;
+                }
                 display.teleport(bubbleLocation(player));
             }
         };
@@ -103,7 +110,10 @@ public class ChatBubbleListener implements Listener {
 
         // Eliminar después de X segundos
         BukkitRunnable expire = new BukkitRunnable() {
-            @Override public void run() { removeBubble(player.getUniqueId()); }
+            @Override
+            public void run() {
+                removeBubble(player.getUniqueId());
+            }
         };
         expire.runTaskLater(plugin, DISPLAY_TICKS);
 
@@ -111,15 +121,23 @@ public class ChatBubbleListener implements Listener {
     }
 
     private Location bubbleLocation(Player player) {
-        return player.getLocation().add(0, BUBBLE_Y, 0);
+        Location loc = player.getLocation();
+        double baseY = player.getBoundingBox().getMaxY();
+        // BUBBLE_Y suele ser ~2.35. Restamos 1.8 (altura base de jugador de pie)
+        // para obtener un offset dinámico sobre la cabeza, sin importar si va en montura, nada o se agacha.
+        double offset = BUBBLE_Y - 1.8;
+        loc.setY(baseY + offset);
+        return loc;
     }
 
     public void removeBubble(UUID uuid) {
         BubbleData data = bubbles.remove(uuid);
-        if (data == null) return;
+        if (data == null)
+            return;
         data.follow().cancel();
         data.expire().cancel();
-        if (!data.display().isDead()) data.display().remove();
+        if (!data.display().isDead())
+            data.display().remove();
     }
 
     public void removeAll() {

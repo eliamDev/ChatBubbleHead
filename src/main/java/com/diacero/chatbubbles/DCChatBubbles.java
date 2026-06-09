@@ -13,7 +13,7 @@ public class DCChatBubbles extends JavaPlugin {
         bubbleListener = new ChatBubbleListener(this);
         getServer().getPluginManager().registerEvents(bubbleListener, this);
         getCommand("chatbubble").setExecutor(new ChatBubbleCommand(this));
-        getLogger().info("DCChatBubbles v" + getDescription().getVersion() + " habilitado.");
+        getLogger().info("DCChatBubbles v" + getPluginMeta().getVersion() + " habilitado.");
     }
 
     @Override
