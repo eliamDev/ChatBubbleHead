@@ -121,13 +121,23 @@ public class ChatBubbleListener implements Listener {
     }
 
     private Location bubbleLocation(Player player) {
-        Location loc = player.getLocation();
-        double baseY = player.getBoundingBox().getMaxY();
-        // BUBBLE_Y suele ser ~2.35. Restamos 1.8 (altura base de jugador de pie)
-        // para obtener un offset dinámico sobre la cabeza, sin importar si va en montura, nada o se agacha.
-        double offset = BUBBLE_Y - 1.8;
-        loc.setY(baseY + offset);
-        return loc;
+        if (player.isInsideVehicle() && player.getVehicle() != null) {
+            // En monturas (camellos, caballos), Spigot calcula la altura desde las patas.
+            // Solución: Usar la parte más alta de la caja de colisión del animal como base.
+            Location loc = player.getLocation();
+            double vehicleTop = player.getVehicle().getBoundingBox().getMaxY();
+            
+            // Sumamos 0.7 (altura aprox de la cabeza del jugador sentado) + tu offset de configuración
+            double sittingOffset = 0.7 + (BUBBLE_Y - 1.8);
+            loc.setY(vehicleTop + sittingOffset);
+            return loc;
+        } else {
+            // Jugador a pie, volando, nadando o agachado
+            Location loc = player.getEyeLocation();
+            double offset = BUBBLE_Y - 1.62;
+            loc.add(0, offset, 0);
+            return loc;
+        }
     }
 
     public void removeBubble(UUID uuid) {
