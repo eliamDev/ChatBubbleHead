@@ -34,8 +34,6 @@
 | `/chatbubble reload` | Recarga el `config.yml` sin reiniciar | `dc.chatbubble.reload` |
 | `/chatbubble global` | Activa/desactiva las burbujas para todo el servidor | `dc.chatbubble.global` |
 
-**Aliases:** `/bubble`, `/cb`
-
 ---
 
 ## 🔐 Permisos
