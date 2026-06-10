@@ -28,6 +28,7 @@ public class DCChatBubbles extends JavaPlugin {
         bubbleListener = new ChatBubbleListener(this);
         getServer().getPluginManager().registerEvents(bubbleListener, this);
         getCommand("chatbubble").setExecutor(new ChatBubbleCommand(this));
+        getCommand("chatbubble").setTabCompleter(new ChatBubbleTabCompleter(this));
 
         getLogger().info("DCChatBubbles v" + getPluginMeta().getVersion() + " habilitado con Toggle Personal.");
     }
@@ -44,6 +45,7 @@ public class DCChatBubbles extends JavaPlugin {
         dataFile = new File(getDataFolder(), "data.yml");
         if (!dataFile.exists()) {
             try {
+                getDataFolder().mkdirs();
                 dataFile.createNewFile();
             } catch (IOException e) {
                 getLogger().severe("No se pudo crear data.yml");
