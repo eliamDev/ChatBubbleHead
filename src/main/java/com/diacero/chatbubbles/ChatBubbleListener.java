@@ -20,6 +20,7 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,9 +33,21 @@ public class ChatBubbleListener implements Listener {
     private int LINE_WIDTH;
 
     private final JavaPlugin plugin;
-    private final Map<UUID, BubbleData> bubbles = new HashMap<>();
+    // Map para guardar la lista de globos activos de cada jugador
+    private final Map<UUID, LinkedList<BubbleData>> playerBubbles = new HashMap<>();
 
-    private record BubbleData(TextDisplay display, BukkitRunnable follow, BukkitRunnable expire) {
+    // Clase auxiliar para guardar las tareas y datos asociados a la burbuja
+    private static class BubbleData {
+        TextDisplay display;
+        BukkitRunnable follow;
+        BukkitRunnable expire;
+        double stackOffset = 0.0;
+
+        BubbleData(TextDisplay display, BukkitRunnable follow, BukkitRunnable expire) {
+            this.display = display;
+            this.follow = follow;
+            this.expire = expire;
+        }
     }
 
     public ChatBubbleListener(JavaPlugin plugin) {
@@ -71,13 +84,26 @@ public class ChatBubbleListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        removeBubble(event.getPlayer().getUniqueId());
+        removeAllBubbles(event.getPlayer().getUniqueId());
     }
 
     // ── Lógica ────────────────────────────────────────────────────────────────
 
     private void spawnBubble(Player player, String message) {
-        removeBubble(player.getUniqueId()); // reemplaza el globo anterior si existe
+        UUID uuid = player.getUniqueId();
+        LinkedList<BubbleData> list = playerBubbles.computeIfAbsent(uuid, k -> new LinkedList<>());
+
+        // Limitar a 3 globos: si ya hay 3, forzamos la salida del más viejo
+        if (list.size() >= 3) {
+            BubbleData oldest = list.removeFirst();
+            oldest.expire.cancel();
+            oldest.expire.run(); // Ejecuta la animación de salida inmediatamente
+        }
+
+        // Empujar los globos existentes hacia arriba
+        for (BubbleData bd : list) {
+            bd.stackOffset += 0.4;
+        }
 
         TextDisplay display = player.getWorld().spawn(bubbleLocation(player), TextDisplay.class, td -> {
             td.text(Component.text(" " + message + " ").color(NamedTextColor.BLACK));
@@ -99,7 +125,7 @@ public class ChatBubbleListener implements Listener {
         // Aplicamos la animación premium de crecimiento (Pop-in) con 1 tick de retraso para que el cliente la dibuje
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             if (!display.isDead()) {
-                display.setInterpolationDuration(10); // 10 ticks (0.5 seg) para que nazca más suavemente
+                display.setInterpolationDuration(7); // 7 ticks para que nazca más suavemente
                 display.setInterpolationDelay(0);
                 display.setTransformation(new Transformation(
                         new Vector3f(0, 0, 0),
@@ -109,6 +135,9 @@ public class ChatBubbleListener implements Listener {
             }
         }, 1L);
 
+        // Variables temporales para pasar a la clase de datos (arreglo de 1 elemento para poder ser referenciado en lambdas)
+        final BubbleData[] dataContainer = new BubbleData[1];
+
         // Seguir al jugador cada 2 ticks
         BukkitRunnable follow = new BukkitRunnable() {
             @Override
@@ -117,7 +146,11 @@ public class ChatBubbleListener implements Listener {
                     cancel();
                     return;
                 }
-                display.teleport(bubbleLocation(player));
+                Location loc = bubbleLocation(player);
+                if (dataContainer[0] != null) {
+                    loc.add(0, dataContainer[0].stackOffset, 0); // Aplica el offset de apilamiento
+                }
+                display.teleport(loc);
             }
         };
         follow.runTaskTimer(plugin, 1L, 2L);
@@ -136,15 +169,27 @@ public class ChatBubbleListener implements Listener {
                             new AxisAngle4f(0, 0, 0, 1)));
                 }
                 
-                // Borrar la entidad por completo justo después de que termine la animación
+                // Borrar la entidad por completo y remover de la lista activa
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                    removeBubble(player.getUniqueId());
+                    if (dataContainer[0] != null) {
+                        dataContainer[0].follow.cancel();
+                        if (!display.isDead()) display.remove();
+                        LinkedList<BubbleData> currentList = playerBubbles.get(uuid);
+                        if (currentList != null) {
+                            currentList.remove(dataContainer[0]);
+                            if (currentList.isEmpty()) {
+                                playerBubbles.remove(uuid);
+                            }
+                        }
+                    }
                 }, 11L);
             }
         };
         expire.runTaskLater(plugin, DISPLAY_TICKS);
 
-        bubbles.put(player.getUniqueId(), new BubbleData(display, follow, expire));
+        BubbleData newData = new BubbleData(display, follow, expire);
+        dataContainer[0] = newData;
+        list.addLast(newData);
     }
 
     private Location bubbleLocation(Player player) {
@@ -167,17 +212,19 @@ public class ChatBubbleListener implements Listener {
         }
     }
 
-    public void removeBubble(UUID uuid) {
-        BubbleData data = bubbles.remove(uuid);
-        if (data == null)
+    public void removeAllBubbles(UUID uuid) {
+        LinkedList<BubbleData> list = playerBubbles.remove(uuid);
+        if (list == null)
             return;
-        data.follow().cancel();
-        data.expire().cancel();
-        if (!data.display().isDead())
-            data.display().remove();
+        for (BubbleData data : list) {
+            data.follow.cancel();
+            data.expire.cancel();
+            if (!data.display.isDead())
+                data.display.remove();
+        }
     }
 
     public void removeAll() {
-        new HashMap<>(bubbles).keySet().forEach(this::removeBubble);
+        new HashMap<>(playerBubbles).keySet().forEach(this::removeAllBubbles);
     }
 }
