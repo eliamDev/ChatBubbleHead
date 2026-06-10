@@ -2,7 +2,7 @@ package com.diacero.chatbubbles;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -31,6 +31,11 @@ public class ChatBubbleListener implements Listener {
     private float BUBBLE_Y;
     private float SCALE;
     private int LINE_WIDTH;
+    private Color BG_COLOR;
+    private TextColor TEXT_COLOR;
+    private boolean TEXT_SHADOW;
+    private int MAX_BUBBLES;
+    private double STACK_DISTANCE;
 
     private final JavaPlugin plugin;
     // Map para guardar la lista de globos activos de cada jugador
@@ -58,9 +63,36 @@ public class ChatBubbleListener implements Listener {
     public void reloadConfig() {
         MAX_CHARS = plugin.getConfig().getInt("max_chars", 80);
         DISPLAY_TICKS = plugin.getConfig().getInt("duracion", 6) * 20L;
-        BUBBLE_Y = (float) plugin.getConfig().getDouble("altura", 2.35);
-        SCALE = (float) plugin.getConfig().getDouble("escala", 0.6);
-        LINE_WIDTH = plugin.getConfig().getInt("ancho_linea", 190);
+        BUBBLE_Y = (float) plugin.getConfig().getDouble("altura", 2.2);
+        SCALE = (float) plugin.getConfig().getDouble("escala", 1.0);
+        LINE_WIDTH = plugin.getConfig().getInt("ancho_linea", 150);
+        
+        String hexBg = plugin.getConfig().getString("color_fondo", "#FFFFFF");
+        int alphaBg = plugin.getConfig().getInt("opacidad_fondo", 220);
+        BG_COLOR = parseBukkitColor(hexBg, alphaBg);
+        
+        String hexText = plugin.getConfig().getString("color_texto", "#000000");
+        TEXT_COLOR = TextColor.fromHexString(hexText);
+        if (TEXT_COLOR == null) TEXT_COLOR = TextColor.color(0, 0, 0);
+        
+        TEXT_SHADOW = plugin.getConfig().getBoolean("sombra_texto", false);
+        MAX_BUBBLES = plugin.getConfig().getInt("limite_burbujas", 5);
+        STACK_DISTANCE = plugin.getConfig().getDouble("distancia_apilado", 0.3);
+    }
+
+    private Color parseBukkitColor(String hex, int alpha) {
+        try {
+            if (hex.startsWith("#")) hex = hex.substring(1);
+            if (hex.length() == 6) {
+                int r = Integer.valueOf(hex.substring(0, 2), 16);
+                int g = Integer.valueOf(hex.substring(2, 4), 16);
+                int b = Integer.valueOf(hex.substring(4, 6), 16);
+                return Color.fromARGB(alpha, r, g, b);
+            }
+        } catch (Exception e) {
+            // Fallback en caso de error
+        }
+        return Color.fromARGB(alpha, 255, 255, 255);
     }
 
     // ── Eventos ───────────────────────────────────────────────────────────────
@@ -93,8 +125,8 @@ public class ChatBubbleListener implements Listener {
         UUID uuid = player.getUniqueId();
         LinkedList<BubbleData> list = playerBubbles.computeIfAbsent(uuid, k -> new LinkedList<>());
 
-        // Limitar a 3 globos: si ya hay 3, forzamos la salida del más viejo
-        if (list.size() >= 3) {
+        // Limitar globos
+        if (list.size() >= MAX_BUBBLES) {
             BubbleData oldest = list.removeFirst();
             oldest.expire.cancel();
             oldest.expire.run(); // Ejecuta la animación de salida inmediatamente
@@ -102,18 +134,18 @@ public class ChatBubbleListener implements Listener {
 
         // Empujar los globos existentes hacia arriba
         for (BubbleData bd : list) {
-            bd.stackOffset += 0.4;
+            bd.stackOffset += STACK_DISTANCE;
         }
 
         TextDisplay display = player.getWorld().spawn(bubbleLocation(player), TextDisplay.class, td -> {
-            td.text(Component.text(" " + message + " ").color(NamedTextColor.BLACK));
+            td.text(Component.text(" " + message + " ").color(TEXT_COLOR));
             td.setBillboard(Display.Billboard.CENTER); // siempre mira al jugador
-            td.setBackgroundColor(Color.fromARGB(220, 255, 255, 255)); // fondo blanco
+            td.setBackgroundColor(BG_COLOR); 
             td.setDefaultBackground(false);
             td.setLineWidth(LINE_WIDTH);
             td.setPersistent(false);
             td.setTeleportDuration(4); // interpolación suave al mover
-            td.setShadowed(false);
+            td.setShadowed(TEXT_SHADOW);
             // Iniciamos con escala 0 para el efecto pop-in
             td.setTransformation(new Transformation(
                     new Vector3f(0, 0, 0),

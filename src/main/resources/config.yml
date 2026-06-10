@@ -1,16 +1,43 @@
 # DCChatBubbles - Configuración
 
+# ===============================
+# OPCIONES DE APARIENCIA
+# ===============================
+# Color del fondo en hexadecimal (ej. #FFFFFF para blanco, #000000 para negro)
+color_fondo: "#FFFFFF"
+
+# Transparencia del fondo (0 a 255). 255 = totalmente opaco, 0 = invisible.
+opacidad_fondo: 220
+
+# Color del texto en hexadecimal (ej. #000000 para negro)
+color_texto: "#000000"
+
+# Activar una sutil sombra detrás del texto para mayor legibilidad
+sombra_texto: false
+
 # Tamaño de la burbuja (0.45 = normal, 0.6 = grande, 0.8 = muy grande)
-escala: 0.6
+escala: 1
 
-# Altura sobre la cabeza del jugador
-altura: 2.35
+# Ancho de línea en píxeles antes de hacer salto de línea
+ancho_linea: 150
 
+# ===============================
+# OPCIONES DE COMPORTAMIENTO
+# ===============================
 # Segundos que dura la burbuja
 duracion: 6
 
 # Máximo de caracteres antes de cortar el mensaje
 max_chars: 80
 
-# Ancho de línea en píxeles antes de hacer salto de línea
-ancho_linea: 190
+# Altura sobre la cabeza del jugador (por defecto 2.2)
+altura: 2.2
+
+# ===============================
+# OPCIONES DE APILAMIENTO
+# ===============================
+# Límite máximo de burbujas en pantalla por jugador
+limite_burbujas: 5
+
+# Distancia (en bloques) que separa a una burbuja de otra al apilarse
+distancia_apilado: 0.3
