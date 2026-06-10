@@ -30,7 +30,7 @@ public class DCChatBubbles extends JavaPlugin {
         getCommand("chatbubble").setExecutor(new ChatBubbleCommand(this));
         getCommand("chatbubble").setTabCompleter(new ChatBubbleTabCompleter(this));
 
-        getLogger().info("DCChatBubbles v" + getPluginMeta().getVersion() + " habilitado con Toggle Personal.");
+        getLogger().info("DCChatBubbles v" + getDescription().getVersion() + " habilitado con Toggle Personal.");
     }
 
     @Override

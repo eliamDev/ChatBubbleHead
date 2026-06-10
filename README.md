@@ -66,8 +66,9 @@
 
 ## 📋 Requisitos
 
-- Servidor **Paper** 1.21+ (o derivados como Purpur / Folia no soportado aún)
+- Servidor **Paper 1.20.2+** (1.20.2, 1.20.4, 1.20.6, 1.21.x — o derivados como Purpur)
 - **Java 21**
+- ❌ No compatible con Spigot, Folia, ni versiones anteriores a 1.20.2
 
 ---
 
