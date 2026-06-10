@@ -6,7 +6,7 @@
 
     <groupId>com.diacero</groupId>
     <artifactId>DCChatBubbles</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
 
     <properties>
