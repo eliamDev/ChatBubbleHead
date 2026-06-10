@@ -1,12 +1,8 @@
 # DCChatBubbles
 
-Un plugin "Premium" para Minecraft que transforma los aburridos mensajes del chat en **burbujas de texto animadas** que flotan directamente sobre la cabeza de los jugadores.
+Un plugin para Minecraft que transforma los mensajes del chat en **burbujas de texto** que flotan directamente sobre la cabeza del jugador.
 
 ## ✨ Características Principales
-
-* **Animaciones Suaves (Premium Feel):** Las burbujas nacen con un efecto de crecimiento (*Pop-in*) y desaparece encogiéndose suavemente (*Pop-out*).
-* **Burbujas Apilables (Stacking):** Si un jugador envía múltiples mensajes rápidos, las burbujas anteriores no desaparecen bruscamente. En su lugar, se deslizan suavemente hacia arriba para dejar espacio al nuevo mensaje.
-* **Soporte para Monturas:** La altura del globo se ajusta dinámicamente. Si el jugador se sube a un caballo, camello o bote, el globo aparecerá correctamente sobre su cabeza sin quedarse atrapado en el cuerpo del animal.
 * **Totalmente Personalizable:** Cuenta con un `config.yml` muy completo donde puedes cambiar:
   * Colores del fondo y del texto (soporta Códigos Hexadecimales `#FFFFFF`).
   * Opacidad del fondo (transparencia).
@@ -28,4 +24,4 @@ El plugin utiliza el comando principal `/chatbubble` (o sus alias si se configur
 1. Compila el plugin o descarga el archivo `.jar`.
 2. Colócalo en la carpeta `plugins/` de tu servidor.
 3. Inicia el servidor.
-4. (Opcional) Edita el archivo `config.yml` generado dentro de `plugins/DCChatBubbles/` a tu gusto y usa `/chatbubble reload`.
+4. (Opcional) Edita el archivo `config.yml` generado dentro de `plugins/DCChatBubbles/` a tu gusto y usa `/chatbubble reload` para aplicar cambios.

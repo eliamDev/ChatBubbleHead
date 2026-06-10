@@ -99,8 +99,15 @@ public class ChatBubbleListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
-        if (!((DCChatBubbles) plugin).isBubblesEnabled())
+        if (!((DCChatBubbles) plugin).isGlobalEnabled())
             return;
+
+        final Player player = event.getPlayer();
+        
+        // Si el jugador apagó sus propias burbujas, no generamos burbujas para él
+        if (((DCChatBubbles) plugin).isPlayerHidden(player.getUniqueId()))
+            return;
+
         String plain = PlainTextComponentSerializer.plainText().serialize(event.message());
         if (plain.isBlank())
             return;
@@ -108,7 +115,6 @@ public class ChatBubbleListener implements Listener {
             plain = plain.substring(0, MAX_CHARS - 3) + "...";
 
         final String message = plain;
-        final Player player = event.getPlayer();
 
         // AsyncChatEvent es async — spawneamos en el hilo principal
         plugin.getServer().getScheduler().runTask(plugin, () -> spawnBubble(player, message));
@@ -153,6 +159,14 @@ public class ChatBubbleListener implements Listener {
                     new Vector3f(0, 0, 0),
                     new AxisAngle4f(0, 0, 0, 1)));
         });
+
+        // Ocultar la entidad físicamente a los jugadores que desactivaron la opción
+        for (UUID hiddenUuid : ((DCChatBubbles) plugin).getHiddenPlayers()) {
+            Player hiddenPlayer = plugin.getServer().getPlayer(hiddenUuid);
+            if (hiddenPlayer != null && hiddenPlayer.isOnline()) {
+                hiddenPlayer.hideEntity(plugin, display);
+            }
+        }
 
         // Aplicamos la animación premium de crecimiento (Pop-in) con 1 tick de retraso para que el cliente la dibuje
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {

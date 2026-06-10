@@ -7,11 +7,17 @@ author: DiaCero
 
 commands:
   chatbubble:
-    description: Activa o desactiva los globos de chat.
-    usage: /chatbubble
-    permission: dc.chatbubble
+    description: Permite apagar o encender las burbujas para ti mismo, o recargar la configuración.
+    usage: /chatbubble [reload]
+    permission: dc.chatbubble.toggle
 
 permissions:
-  dc.chatbubble:
-    description: Permite activar/desactivar los globos de chat.
+  dc.chatbubble.toggle:
+    description: Permite al jugador desactivar sus propios globos de chat.
+    default: true
+  dc.chatbubble.reload:
+    description: Permite recargar la configuración del plugin.
+    default: op
+  dc.chatbubble.global:
+    description: Permite apagar las burbujas de todo el servidor de emergencia.
     default: op
